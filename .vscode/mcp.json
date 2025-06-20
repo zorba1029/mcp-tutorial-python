@@ -1,0 +1,11 @@
+{
+    "inputs": [],
+    "servers": {
+        "hello-mcp": {
+            "command": "uv",
+            "args": [
+                "run", "ch03/03_llm-client/server.py"
+            ]
+        }
+    }
+}

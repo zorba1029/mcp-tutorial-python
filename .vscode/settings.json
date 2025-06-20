@@ -1,0 +1,14 @@
+{
+   "mcp": {
+		"servers": {
+			"Python LLM Server": {
+				"command": "uv",
+				"args": [
+					"run",
+					"python",
+					"ch03/03_llm-client/server.py"
+				]
+			}
+		}
+	}
+}

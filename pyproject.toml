@@ -1,0 +1,14 @@
+[project]
+name = "mcp-tutorial-python"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "azure-ai-inference>=1.0.0b9",
+    "fastapi[all]>=0.115.13",
+    "fastmcp>=2.8.1",
+    "mcp[cli]>=1.9.4",
+    "openai>=1.88.0",
+    "uvicorn>=0.34.3",
+]
