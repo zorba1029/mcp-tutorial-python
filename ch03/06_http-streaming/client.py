@@ -2,13 +2,13 @@
 #
 # HTTP Streaming 클라이언트 구현
 #
-from mcp.client.streamable_http import streamablehttp_client
-from mcp import ClientSession
 import asyncio
-import mcp.types as types
-from mcp.shared.session import RequestResponder
 import requests
 import logging
+import mcp.types as types
+from mcp import ClientSession
+from mcp.client.streamable_http import streamablehttp_client
+from mcp.shared.session import RequestResponder
 
 
 # Configure logging

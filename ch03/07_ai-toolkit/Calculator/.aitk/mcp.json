@@ -1,0 +1,8 @@
+{
+    "servers": {
+        "local-server-calculator": {
+            "type": "sse",
+            "url": "http://localhost:3001/sse"
+        }
+    }
+}
