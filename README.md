@@ -137,3 +137,25 @@ code --add-mcp '{"name":"Python LLM Server","command":"uv","args":["run","python
         # 별도의 터미널에서 실행
         uv run python client.py
         ```
+
+---
+
+### Chapter 5: 고급 주제
+
+#### Part 4: Root Context를 활용한 세션 관리
+
+-   **설명**: MCP의 Root Context 개념을 활용하여 세션 기반 대화 관리 시스템을 구현합니다.
+-   **위치**: `ch05-advanced-topicss/04_mcp-root-contexts/`
+-   **주요 기능**: 
+    - 여러 개의 독립적인 대화 세션 생성 및 관리
+    - 세션별 대화 기록 저장
+    - 세션 검색 및 요약 기능
+
+**실행 방법:**
+
+```bash
+# 간단한 통합 데모 (권장)
+uv run python ch05-advanced-topicss/04_mcp-root-contexts/simple_demo.py
+```
+
+이 데모는 서버와 클라이언트가 하나의 파일에 통합되어 있어 Root Context의 개념을 쉽게 이해할 수 있습니다.

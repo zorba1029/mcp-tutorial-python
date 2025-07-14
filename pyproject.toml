@@ -8,7 +8,10 @@ dependencies = [
     "azure-ai-inference>=1.0.0b9",
     "fastapi[all]>=0.115.13",
     "fastmcp>=2.8.1",
+    "mcp-client>=0.0.0",
+    "mcp-server>=0.1.4",
     "mcp[cli]>=1.9.4",
     "openai>=1.88.0",
+    "pillow>=11.3.0",
     "uvicorn>=0.34.3",
 ]
