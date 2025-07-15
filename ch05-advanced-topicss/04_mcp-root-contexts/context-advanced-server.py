@@ -76,6 +76,7 @@ async def create_task_session(
         schema=TaskConfiguration
     )
     
+    # print(f"config_result: {config_result}")
     if config_result.action != "accept" or not config_result.data:
         await ctx.warning("작업 설정이 취소되었습니다")
         return {"status": "cancelled", "reason": "사용자가 설정을 취소함"}
@@ -87,7 +88,7 @@ async def create_task_session(
         "id": session_id,
         "name": task_name,
         "description": description,
-        "config": config.dict(),
+        "config": config.model_dump(),  # Convert Pydantic model to dict for JSON serialization
         "status": "initialized",
         "created_at": datetime.now().isoformat(),
         "logs": [],
@@ -101,7 +102,7 @@ async def create_task_session(
     
     return {
         "session_id": session_id,
-        "config": config.dict(),
+        "config": config,
         "message": f"작업 '{task_name}'이 생성되었습니다"
     }
 

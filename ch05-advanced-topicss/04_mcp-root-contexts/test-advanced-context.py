@@ -50,16 +50,109 @@ class NotificationHandler:
         if isinstance(message, types.ServerNotification):
             self.notifications.append(message)
             
-            # 진행 상황 알림 특별 처리
-            if hasattr(message, 'method') and 'progress' in str(message.method):
-                print(f"📊 진행 상황: {message}")
-            else:
-                print(f"🔔 알림: {type(message).__name__}")
+            # 알림 메시지 상세 정보 출력
+            print(f"\n🔔 [NOTIFICATION] 수신:")
+            print(f"   타입: {type(message).__name__}")
+            
+            if hasattr(message, 'method'):
+                print(f"   메서드: {message.method}")
+            if hasattr(message, 'params'):
+                print(f"   파라미터: {message.params}")
+            
+            # 리소스 관련 알림 특별 처리
+            if hasattr(message, 'method'):
+                if 'resource' in str(message.method):
+                    print(f"   📁 리소스 변경 알림!")
+                elif 'tool' in str(message.method):
+                    print(f"   🔧 도구 변경 알림!")
+                elif 'prompt' in str(message.method):
+                    print(f"   💬 프롬프트 변경 알림!")
+        else:
+            print(f"🔔 [NOTIFICATION]: 알 수 없는 메시지 타입: {type(message).__name__}")
+
+async def elicitation_handler(context, params):
+    """Advanced Context 테스트용 Elicitation 핸들러"""
+    print(f"\n🤖 Elicitation 요청:")
+    print(f"메시지: {params.message}")
+    
+    # 작업 설정 요청
+    if "작업의 설정을 구성해주세요" in params.message:
+        print("작업 설정을 구성합니다...")
+        
+        try:
+            priority = input("작업 우선순위를 선택하세요 (low/medium/high) [medium]: ").strip()
+            if not priority:
+                priority = "medium"
+        except EOFError:
+            print("자동 기본값 사용: medium")
+            priority = "medium"
+        
+        try:
+            notify = input("완료 시 알림을 받으시겠습니까? (y/n) [y]: ").strip().lower()
+            notify_on_complete = notify in ['y', 'yes', '예', '네'] if notify else True
+        except EOFError:
+            print("자동 기본값 사용: 알림 받기")
+            notify_on_complete = True
+        
+        try:
+            retries = input("최대 재시도 횟수를 입력하세요 [3]: ").strip()
+            max_retries = int(retries) if retries else 3
+        except (EOFError, ValueError):
+            print("자동 기본값 사용: 3")
+            max_retries = 3
+        
+        response_data = {
+            "priority": priority,
+            "notify_on_complete": notify_on_complete,
+            "max_retries": max_retries
+        }
+        
+        print(f"📝 작업 설정: {response_data}")
+        return types.ElicitResult(action="accept", content=response_data)
+    
+    # 데이터 처리 옵션 요청
+    elif "데이터 처리 옵션을 선택해주세요" in params.message:
+        print("데이터 처리 옵션을 선택합니다...")
+        
+        try:
+            format_type = input("출력 형식을 선택하세요 (json/csv/xml) [json]: ").strip()
+            if not format_type:
+                format_type = "json"
+        except EOFError:
+            print("자동 기본값 사용: json")
+            format_type = "json"
+        
+        try:
+            metadata = input("메타데이터를 포함하시겠습니까? (y/n) [y]: ").strip().lower()
+            include_metadata = metadata in ['y', 'yes', '예', '네'] if metadata else True
+        except EOFError:
+            print("자동 기본값 사용: 메타데이터 포함")
+            include_metadata = True
+        
+        try:
+            compress = input("압축을 사용하시겠습니까? (y/n) [n]: ").strip().lower()
+            compression = compress in ['y', 'yes', '예', '네']
+        except EOFError:
+            print("자동 기본값 사용: 압축 안함")
+            compression = False
+        
+        response_data = {
+            "format": format_type,
+            "include_metadata": include_metadata,
+            "compression": compression
+        }
+        
+        print(f"📝 처리 옵션: {response_data}")
+        return types.ElicitResult(action="accept", content=response_data)
+    
+    else:
+        print("📝 기본 응답: 취소")
+        return types.ElicitResult(action="cancel")
 
 async def test_task_session(session: ClientSession):
     """작업 세션 테스트"""
     print("\n" + "="*60)
-    print("🧪 작업 세션 생성 및 실행 테스트")
+    print("🧪 1. 작업 세션 생성 및 실행 테스트 - test_task_session()")
     print("="*60)
     
     # 1. 작업 세션 생성
@@ -119,7 +212,7 @@ async def test_task_session(session: ClientSession):
 async def test_batch_processing(session: ClientSession):
     """배치 처리 테스트"""
     print("\n" + "="*60)
-    print("🧪 배치 데이터 처리 테스트")
+    print("🧪 2. 배치 데이터 처리 테스트 - test_batch_processing()")
     print("="*60)
     
     # 테스트 데이터
@@ -146,7 +239,7 @@ async def test_batch_processing(session: ClientSession):
 async def test_monitoring(session: ClientSession):
     """시스템 모니터링 테스트"""
     print("\n" + "="*60)
-    print("🧪 시스템 모니터링 테스트")
+    print("🧪 3. 시스템 모니터링 테스트 - test_monitoring()")
     print("="*60)
     
     print("\n5초간 시스템 모니터링을 시작합니다...")
@@ -169,7 +262,7 @@ async def test_monitoring(session: ClientSession):
 async def test_resources(session: ClientSession):
     """리소스 테스트"""
     print("\n" + "="*60)
-    print("🧪 리소스 접근 테스트")
+    print("🧪 4. 리소스 접근 테스트 - test_resources()")
     print("="*60)
     
     # 활성 작업 목록 조회
@@ -189,7 +282,8 @@ async def run():
             read,
             write,
             logging_callback=log_collector,
-            message_handler=notification_handler
+            message_handler=notification_handler,
+            elicitation_callback=elicitation_handler
         ) as session:
             
             # 세션 초기화
