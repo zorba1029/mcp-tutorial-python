@@ -242,13 +242,117 @@ class PaymentMethod(BaseModel):
 1. **자동 테스트 모드** (`python test-elicitation.py`)
    - 서버 정보 확인
    - 리소스 읽기 테스트
-   - 모든 도구 순차적 테스트
+   - 모든 도구 순차적 테스트 (자동 응답)
    - 로그 수집 및 통계
 
 2. **대화형 테스트 모드** (`python test-elicitation.py interactive`)
    - 수동 도구 실행
-   - 사용자 입력으로 테스트
+   - **실제 사용자 입력** 으로 Elicitation 테스트
    - 실시간 로그 모니터링
+
+### 중요 업데이트: 실제 사용자 입력 지원
+
+이제 `elicitation_handler`가 실제 사용자 입력을 받습니다:
+
+```python
+async def elicitation_handler(context, params):
+    """실제 사용자 입력을 받는 Elicitation 핸들러"""
+    print(f"\n🤖 Elicitation 요청:")
+    print(f"메시지: {params.message}")
+    
+    # 예약 대체 날짜 확인
+    if "다른 날짜" in params.message:
+        print(f"질문: {params.message}")
+        
+        check_alt = input("다른 날짜를 확인하시겠습니까? (y/n): ").lower().strip()
+        
+        if check_alt in ['y', 'yes', '예', '네']:
+            alt_date = input("원하는 대체 날짜를 입력하세요 (YYYY-MM-DD): ").strip()
+            response_data = {
+                "checkAlternative": True,
+                "alternativeDate": alt_date
+            }
+            return types.ElicitResult(action="accept", content=response_data)
+        else:
+            response_data = {
+                "checkAlternative": False,
+                "alternativeDate": "2024-12-26"
+            }
+            return types.ElicitResult(action="accept", content=response_data)
+    
+    # 배송 옵션 선택
+    elif "배송 옵션" in params.message:
+        print(f"질문: {params.message}")
+        
+        delivery_type = input("배송 방법을 선택하세요 (standard/express/overnight): ").strip()
+        gift_wrap = input("선물 포장을 원하시나요? (y/n): ").lower().strip() in ['y', 'yes', '예', '네']
+        special_instructions = input("특별 요청사항 (없으면 엔터): ").strip()
+        
+        response_data = {
+            "deliveryType": delivery_type if delivery_type else "standard",
+            "giftWrap": gift_wrap,
+            "specialInstructions": special_instructions if special_instructions else None
+        }
+        return types.ElicitResult(action="accept", content=response_data)
+    
+    # 결제 방법 선택
+    elif "결제 방법" in params.message:
+        print(f"질문: {params.message}")
+        
+        method = input("결제 수단을 선택하세요 (card/bank/paypal): ").strip()
+        save_for_future = input("다음에도 사용하기 위해 저장하시겠습니까? (y/n): ").lower().strip() in ['y', 'yes', '예', '네']
+        
+        response_data = {
+            "method": method if method else "card",
+            "saveForFuture": save_for_future
+        }
+        return types.ElicitResult(action="accept", content=response_data)
+    
+    # 알림 설정
+    elif "알림" in params.message:
+        print(f"질문: {params.message}")
+        
+        if "설정하시겠습니까" in params.message:
+            enable = input("알림을 받으시겠습니까? (y/n): ").lower().strip() in ['y', 'yes', '예', '네']
+            if enable:
+                email = input("이메일로 받으시겠습니까? (y/n): ").lower().strip() in ['y', 'yes', '예', '네']
+                sms = input("SMS로 받으시겠습니까? (y/n): ").lower().strip() in ['y', 'yes', '예', '네']
+                response_data = {
+                    "enable": True,
+                    "email": email,
+                    "sms": sms
+                }
+            else:
+                response_data = {
+                    "enable": False,
+                    "email": False,
+                    "sms": False
+                }
+        else:
+            frequency = input("알림 빈도를 선택하세요 (immediate/daily/weekly): ").strip()
+            quiet_hours = input("방해 금지 시간을 설정하시겠습니까? (y/n): ").lower().strip() in ['y', 'yes', '예', '네']
+            response_data = {
+                "frequency": frequency if frequency else "daily",
+                "quiet_hours": quiet_hours
+            }
+        return types.ElicitResult(action="accept", content=response_data)
+    
+    else:
+        return types.ElicitResult(action="cancel")
+```
+
+### 클라이언트 설정
+
+**중요**: `elicitation_callback` 파라미터를 ClientSession에 추가해야 합니다:
+
+```python
+async with ClientSession(
+    read, 
+    write, 
+    logging_callback=log_collector,
+    elicitation_callback=elicitation_handler  # 필수!
+) as session:
+```
 
 ### 로그 수집 기능
 
@@ -278,6 +382,7 @@ class ElicitationLogCollector:
 
 ### 테스트 실행 결과 예시
 
+#### 1. 자동 테스트 모드 (예전과 동일)
 ```
 🚀 자동 테스트 모드로 실행합니다...
 ============================================================
@@ -322,6 +427,71 @@ class ElicitationLogCollector:
 ✅ 모든 테스트 완료!
 ```
 
+#### 2. 대화형 테스트 모드 (NEW! 실제 사용자 입력)
+```
+🎮 대화형 모드로 실행합니다...
+============================================================
+✅ 서버에 연결되었습니다.
+
+🎮 대화형 테스트 모드
+사용 가능한 명령:
+1. book - 테이블 예약
+2. order - 주문 처리
+3. notify - 알림 설정
+4. info - 서버 정보
+5. quit - 종료
+
+명령을 입력하세요: book
+날짜 (YYYY-MM-DD): 2024-12-25
+시간 (HH:MM): 12:00
+인원수: 3
+ℹ️ [INFO] 예약 요청: 2024-12-25 12:00, 3명
+⚠️ [WARNING] 2024-12-25는 예약이 가득 찼습니다
+
+🤖 Elicitation 요청:
+메시지: 3명 예약이 2024-12-25에는 불가능합니다. 다른 날짜를 확인하시겠습니까?
+질문: 3명 예약이 2024-12-25에는 불가능합니다. 다른 날짜를 확인하시겠습니까?
+다른 날짜를 확인하시겠습니까? (y/n): y
+원하는 대체 날짜를 입력하세요 (YYYY-MM-DD): 2024-12-27
+📝 사용자 응답: {'checkAlternative': True, 'alternativeDate': '2024-12-27'}
+ℹ️ [INFO] 대체 날짜로 예약 진행: 2024-12-27
+✅ 예약 완료: 2024-12-27 12:00, 3명
+
+명령을 입력하세요: order
+상품 목록 (쉼표로 구분): 노트북, 마우스, 키보드
+총 금액: 1299.99
+ℹ️ [INFO] 주문 처리 시작: 3개 상품, 총 $1299.99
+
+🤖 Elicitation 요청:
+메시지: 배송 옵션을 선택해주세요
+질문: 배송 옵션을 선택해주세요
+배송 방법을 선택하세요 (standard/express/overnight): express
+선물 포장을 원하시나요? (y/n): y
+특별 요청사항 (없으면 엔터): 조심히 다뤄주세요
+📝 사용자 응답: {'deliveryType': 'express', 'giftWrap': True, 'specialInstructions': '조심히 다뤄주세요'}
+
+🤖 Elicitation 요청:
+메시지: 총 $1317.99 (배송비 포함) - 결제 방법을 선택해주세요
+질문: 총 $1317.99 (배송비 포함) - 결제 방법을 선택해주세요
+결제 수단을 선택하세요 (card/bank/paypal): card
+다음에도 사용하기 위해 저장하시겠습니까? (y/n): y
+📝 사용자 응답: {'method': 'card', 'saveForFuture': True}
+ℹ️ [INFO] 주문 완료: ORD-20240715210800
+
+✅ 주문 완료!
+주문 번호: ORD-20240715210800
+상품: 3개
+배송: express
+선물 포장: 예
+결제: card
+총액: $1317.99
+특별 요청: 조심히 다뤄주세요
+
+명령을 입력하세요: quit
+
+✨ 테스트 완료!
+```
+
 ## 주요 차이점
 
 ### 이전 예제와의 차이
@@ -331,9 +501,49 @@ class ElicitationLogCollector:
 - **실시간 로그**: 서버 로그를 실시간으로 모니터링
 
 ### 테스트 모드 비교
-- **자동 모드**: 전체 기능 순차적 테스트, 로그 통계 표시
-- **대화형 모드**: 사용자가 직접 입력하여 테스트 가능
+- **자동 모드**: 전체 기능 순차적 테스트, 로그 통계 표시 (하드코딩된 응답)
+- **대화형 모드**: 사용자가 직접 입력하여 테스트 가능 (**실제 사용자 입력**)
+
+### 최신 업데이트 (2024년 12월)
+- **실제 사용자 입력**: 더 이상 하드코딩된 응답이 아닌 실제 사용자 입력 처리
+- **완전한 대화형 경험**: 사용자가 실제로 날짜, 배송 옵션, 결제 방법을 선택할 수 있음
+- **ElicitResult 수정**: `data` 대신 `content` 파라미터 사용
+- **완전한 Context 지원**: 두 개의 파라미터 (`context`, `params`)를 받는 핸들러
+
+## 문제 해결 팁
+
+### 1. "Elicitation not supported" 오류
+```python
+# 원인: elicitation_callback이 없음
+async with ClientSession(read, write, logging_callback=log_collector) as session:
+
+# 해결책: elicitation_callback 추가
+async with ClientSession(read, write, logging_callback=log_collector, elicitation_callback=elicitation_handler) as session:
+```
+
+### 2. "Invalid request parameters" 오류
+```python
+# 원인: 잘못된 함수 시그니처
+async def elicitation_handler(request):  # ❌ 잘못됨
+
+# 해결책: 두 개의 파라미터 사용
+async def elicitation_handler(context, params):  # ✅ 올바름
+```
+
+### 3. "Unexpected elicitation action" 오류
+```python
+# 원인: 잘못된 파라미터 이름
+return types.ElicitResult(action="accept", data=response_data)  # ❌ 잘못됨
+
+# 해결책: content 파라미터 사용
+return types.ElicitResult(action="accept", content=response_data)  # ✅ 올바름
+```
 
 ## 정리
 
 Elicitation은 MCP 도구를 더욱 대화형이고 유연하게 만드는 강력한 기능입니다. `elicitation-server.py`와 `test-elicitation.py`를 통해 실제 애플리케이션에서 사용할 수 있는 완전한 Elicitation 패턴을 학습하고 테스트할 수 있습니다. 
+
+**대화형 테스트 모드**를 통해 실제 사용자 입력으로 Elicitation 기능을 체험해보세요:
+```bash
+uv run python test-elicitation.py interactive
+```
