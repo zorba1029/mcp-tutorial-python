@@ -39,17 +39,106 @@ class ElicitationLogCollector:
         
         print(f"{emoji} [{params.level.upper()}] {params.data}")
 
+async def elicitation_handler(context, params):
+    """Elicitation 요청 처리"""
+    print(f"\n🤖 Elicitation 요청:")
+    print(f"메시지: {params.message}")
+    print(f"스키마: {params.schema.__name__ if hasattr(params.schema, '__name__') else params.schema}")
+    
+    # 사용자 입력 받기
+    if "다른 날짜" in params.message:
+        # 예약 대체 날짜 확인
+        print(f"질문: {params.message}")
+        
+        check_alt = input("다른 날짜를 확인하시겠습니까? (y/n): ").lower().strip()
+        
+        if check_alt in ['y', 'yes', '예', '네']:
+            alt_date = input("원하는 대체 날짜를 입력하세요 (YYYY-MM-DD): ").strip()
+            response_data = {
+                "checkAlternative": True,
+                "alternativeDate": alt_date
+            }
+            print(f"📝 사용자 응답: {response_data}")
+            return types.ElicitResult(action="accept", content=response_data)
+        else:
+            response_data = {
+                "checkAlternative": False,
+                "alternativeDate": "2024-12-26"  # 기본값
+            }
+            print(f"📝 사용자 응답: {response_data}")
+            return types.ElicitResult(action="accept", content=response_data)
+    
+    elif "배송 옵션" in params.message:
+        # 배송 옵션 선택
+        print(f"질문: {params.message}")
+        
+        delivery_type = input("배송 방법을 선택하세요 (standard/express/overnight): ").strip()
+        gift_wrap = input("선물 포장을 원하시나요? (y/n): ").lower().strip() in ['y', 'yes', '예', '네']
+        special_instructions = input("특별 요청사항 (없으면 엔터): ").strip()
+        
+        response_data = {
+            "deliveryType": delivery_type if delivery_type else "standard",
+            "giftWrap": gift_wrap,
+            "specialInstructions": special_instructions if special_instructions else None
+        }
+        print(f"📝 사용자 응답: {response_data}")
+        return types.ElicitResult(action="accept", content=response_data)
+    
+    elif "결제 방법" in params.message:
+        # 결제 방법 선택
+        print(f"질문: {params.message}")
+        
+        method = input("결제 수단을 선택하세요 (card/bank/paypal): ").strip()
+        save_for_future = input("다음에도 사용하기 위해 저장하시겠습니까? (y/n): ").lower().strip() in ['y', 'yes', '예', '네']
+        
+        response_data = {
+            "method": method if method else "card",
+            "saveForFuture": save_for_future
+        }
+        print(f"📝 사용자 응답: {response_data}")
+        return types.ElicitResult(action="accept", content=response_data)
+    
+    elif "알림" in params.message:
+        # 알림 설정
+        print(f"질문: {params.message}")
+        
+        if "설정하시겠습니까" in params.message:
+            enable = input("알림을 받으시겠습니까? (y/n): ").lower().strip() in ['y', 'yes', '예', '네']
+            if enable:
+                email = input("이메일로 받으시겠습니까? (y/n): ").lower().strip() in ['y', 'yes', '예', '네']
+                sms = input("SMS로 받으시겠습니까? (y/n): ").lower().strip() in ['y', 'yes', '예', '네']
+                response_data = {
+                    "enable": True,
+                    "email": email,
+                    "sms": sms
+                }
+            else:
+                response_data = {
+                    "enable": False,
+                    "email": False,
+                    "sms": False
+                }
+        else:
+            frequency = input("알림 빈도를 선택하세요 (immediate/daily/weekly): ").strip()
+            quiet_hours = input("방해 금지 시간을 설정하시겠습니까? (y/n): ").lower().strip() in ['y', 'yes', '예', '네']
+            response_data = {
+                "frequency": frequency if frequency else "daily",
+                "quiet_hours": quiet_hours
+            }
+        print(f"📝 사용자 응답: {response_data}")
+        return types.ElicitResult(action="accept", content=response_data)
+    
+    else:
+        print("📝 기본 응답: 취소")
+        return types.ElicitResult(action="cancel")
+
 async def test_elicitation_server():
     """Elicitation 서버 테스트"""
     log_collector = ElicitationLogCollector()
     
     async with stdio_client(server_params) as (read, write):
-        async with ClientSession(
-            read,
-            write,
-            logging_callback=log_collector
-        ) as session:
-            
+        async with ClientSession(read, write, 
+                                 logging_callback=log_collector, elicitation_callback=elicitation_handler) as session:
             # 서버 초기화
             await session.initialize()
             print("✅ 서버에 연결되었습니다.\n")
@@ -207,12 +296,8 @@ async def interactive_test():
     log_collector = ElicitationLogCollector()
     
     async with stdio_client(server_params) as (read, write):
-        async with ClientSession(
-            read,
-            write,
-            logging_callback=log_collector
-        ) as session:
-            
+        async with ClientSession(read, write, 
+                                 logging_callback=log_collector, elicitation_callback=elicitation_handler) as session:
             await session.initialize()
             print("✅ 서버에 연결되었습니다.\n")
             

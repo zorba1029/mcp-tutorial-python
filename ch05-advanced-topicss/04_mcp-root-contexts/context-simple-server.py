@@ -20,13 +20,8 @@ mcp = FastMCP(
 tasks = {}
 
 @mcp.tool()
-async def simple_task(
-    name: str,
-    duration: int,
-    ctx: Context
-) -> Dict[str, Any]:
+async def simple_task(name: str, duration: int, ctx: Context) -> Dict[str, Any]:
     """간단한 작업 실행 with Context 로깅"""
-    
     task_id = f"task_{datetime.now().timestamp()}"
     
     # 정보 로그
@@ -43,6 +38,7 @@ async def simple_task(
             total=1.0,
             message=f"{name} - {i+1}/{duration}초 경과"
         )
+        # await ctx.debug(f"progress: {progress*100:.0f}%")
         await asyncio.sleep(1)
     
     # 완료 로그
@@ -63,12 +59,8 @@ async def simple_task(
     }
 
 @mcp.tool()
-async def batch_process(
-    items: List[str],
-    ctx: Context
-) -> Dict[str, Any]:
+async def batch_process(items: List[str], ctx: Context) -> Dict[str, Any]:
     """배치 처리 with 진행 상황"""
-    
     await ctx.info(f"배치 처리 시작: {len(items)}개 항목")
     
     processed = []
@@ -83,7 +75,6 @@ async def batch_process(
                 total=1.0,
                 message=f"처리 중: {item}"
             )
-            
             # 처리 시뮬레이션
             await asyncio.sleep(0.5)
             
@@ -96,8 +87,8 @@ async def batch_process(
                 "processed_at": datetime.now().isoformat()
             })
             
-            await ctx.debug(f"항목 처리 완료: {item}")
-            
+            # await ctx.debug(f"progress: {progress*100:.0f}%")
+            # await ctx.debug(f"항목 처리 완료: {item}")
         except Exception as e:
             await ctx.error(f"항목 처리 실패: {item} - {str(e)}")
             errors.append({"item": item, "error": str(e)})
@@ -124,7 +115,7 @@ async def monitor_metrics(
     
     for i in range(seconds):
         # 메트릭 생성
-        cpu = 20 + (i * 5) % 40
+        cpu = 40 + (i * 5) % 40
         memory = 30 + (i * 3) % 30
         
         metric = {
@@ -135,11 +126,13 @@ async def monitor_metrics(
         metrics.append(metric)
         
         # 진행 상황
+        progress = (i + 1) / seconds
         await ctx.report_progress(
-            progress=(i + 1) / seconds,
+            progress=progress,
             total=1.0,
             message=f"CPU: {cpu}%, MEM: {memory}%"
         )
+        # await ctx.debug(f"progress: {progress*100:.0f}%")
         
         # 조건에 따른 로그 레벨
         if cpu > 50:

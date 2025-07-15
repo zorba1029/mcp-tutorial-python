@@ -41,21 +41,29 @@ class SimpleLogCollector:
 async def run():
     """메인 실행 함수"""
     log_collector = SimpleLogCollector()
+    progress_count = 0
+    
+    #-- ADDED 2025-07-15: progress_callback 함수 정의
+    async def progress_callback(progress: float, total: float | None = None, message: str | None = None):
+        nonlocal progress_count
+        progress_count += 1
+        if total and total > 0:
+            percentage = (progress / total) * 100
+            progress_bar = "█" * int(percentage // 5) + "░" * (20 - int(percentage // 5))
+            print(f"📊 [{progress_bar}] {percentage:.1f}% - {message}")
     
     async with stdio_client(server_params) as (read, write):
-        async with ClientSession(
-            read,
-            write,
-            logging_callback=log_collector
-        ) as session:
-            
-            # 세션 초기화
-            await session.initialize()
+        async with ClientSession(read, 
+                                 write, 
+                                 logging_callback=log_collector) as session:
+            # 0. 세션 초기화
+            result = await session.initialize()
+            print(result)
             print("✅ 서버에 연결되었습니다.\n")
             
             # 1. 간단한 작업 실행
             print("="*60)
-            print("1️⃣ 간단한 작업 실행 (3초)")
+            print("1️⃣  간단한 작업 실행 (3초)")
             print("="*60)
             
             result = await session.call_tool(
@@ -63,7 +71,9 @@ async def run():
                 arguments={
                     "name": "데이터 백업",
                     "duration": 3
-                }
+                },
+                #-- ADDED 2025-07-15: progress_callback 추가
+                progress_callback=progress_callback
             )
             
             if result.content:
@@ -81,7 +91,9 @@ async def run():
             
             result = await session.call_tool(
                 "batch_process",
-                arguments={"items": test_items}
+                arguments={"items": test_items},
+                #-- ADDED 2025-07-15: progress_callback 추가
+                progress_callback=progress_callback
             )
             
             if result.content:
@@ -99,7 +111,9 @@ async def run():
             
             result = await session.call_tool(
                 "monitor_metrics",
-                arguments={"seconds": 5}
+                arguments={"seconds": 7},
+                #-- ADDED 2025-07-15: progress_callback 추가
+                progress_callback=progress_callback
             )
             
             if result.content:
@@ -128,6 +142,7 @@ async def run():
             print("📊 로그 통계")
             print("="*60)
             print(f"총 로그 메시지: {len(log_collector.logs)}개")
+            print(f"총 진행 업데이트: {progress_count}개")
             
             # 레벨별 통계
             level_counts = {}

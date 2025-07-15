@@ -49,14 +49,8 @@ class PaymentMethod(BaseModel):
     )
 
 @mcp.tool()
-async def book_table(
-    date: str,
-    time: str,
-    party_size: int,
-    ctx: Context,
-) -> str:
+async def book_table(date: str, time: str, party_size: int, ctx: Context) -> str:
     """레스토랑 테이블 예약 with Elicitation"""
-    
     await ctx.info(f"예약 요청: {date} {time}, {party_size}명")
     
     # 특정 날짜는 예약 불가
@@ -85,13 +79,8 @@ async def book_table(
     return f"✅ 예약 완료: {date} {time}, {party_size}명"
 
 @mcp.tool()
-async def process_order(
-    items: list[str],
-    total_amount: float,
-    ctx: Context,
-) -> str:
+async def process_order(items: list[str], total_amount: float, ctx: Context) -> str:
     """주문 처리 with 배송 옵션 선택"""
-    
     await ctx.info(f"주문 처리 시작: {len(items)}개 상품, 총 ${total_amount}")
     
     # 배송 옵션 선택 요청
@@ -151,12 +140,8 @@ async def process_order(
     return result
 
 @mcp.tool()
-async def configure_notification(
-    notification_type: str,
-    ctx: Context,
-) -> str:
+async def configure_notification(notification_type: str, ctx: Context) -> str:
     """알림 설정 with 다단계 Elicitation"""
-    
     await ctx.info(f"알림 설정 시작: {notification_type}")
     
     # 첫 번째 질문: 알림 받을지 여부
