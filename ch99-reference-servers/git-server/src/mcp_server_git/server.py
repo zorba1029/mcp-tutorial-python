@@ -97,7 +97,6 @@ class GitTools(str, Enum):
     RESET = "git_reset"
     LOG = "git_log"
     CREATE_BRANCH = "git_create_branch"
-    # DELETE_BRANCH = "git_delete_branch"
     CHECKOUT = "git_checkout"
     SHOW = "git_show"
     INIT = "git_init"
@@ -156,7 +155,7 @@ def git_checkout(repo: git.Repo, branch_name: str) -> str:
 def git_init(repo_path: str) -> str:
     try:
         repo = git.Repo.init(path=repo_path, mkdir=True)
-        return f"Initialized empty Git repository in '{repo_path}'."
+        return f"Initialized empty Git repository in '{repo.git_dir}'."
     except Exception as e:
         return f"Failed to initialize repository: {e}"
     

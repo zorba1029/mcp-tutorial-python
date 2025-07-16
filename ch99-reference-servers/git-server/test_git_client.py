@@ -32,13 +32,13 @@ async def test_git_server():
             
             # 1. 도구 목록 확인
             tools_result = await session.list_tools()
-            print("📋 사용 가능한 도구들:")
+            print("📋 사용 가능한 도구들: \n\tsession_list_tools()")
             for tool in tools_result.tools:
                 print(f"  - {tool.name}: {tool.description}")
             print()
             
             # 2. Git 상태 확인
-            print("📊 Git 상태:")
+            print("📊 Git 상태: \n\tsession.call_tool('git_status', {'repo_path': '../..'})")
             try:
                 result = await session.call_tool("git_status", {
                     "repo_path": "../.."
@@ -49,7 +49,7 @@ async def test_git_server():
             print()
             
             # 3. 브랜치 목록 확인
-            print("🌳 로컬 브랜치 목록:")
+            print("🌳 로컬 브랜치 목록: \n\tsession.call_tool('git_branch', {'repo_path': '../..', 'branch_type': 'local'})")
             try:
                 result = await session.call_tool("git_branch", {
                     "repo_path": "../..",
@@ -61,7 +61,7 @@ async def test_git_server():
             print()
             
             # 4. 커밋 히스토리 확인 (최근 5개)
-            print("📜 최근 커밋 히스토리 (5개):")
+            print("📜 최근 커밋 히스토리 (5개): \n\tsession.call_tool('git_log', {'repo_path': '../..', 'max_count': 5})")
             try:
                 result = await session.call_tool("git_log", {
                     "repo_path": "../..",
@@ -73,7 +73,7 @@ async def test_git_server():
             print()
             
             # 5. 스테이징되지 않은 변경사항 확인
-            print("🔍 스테이징되지 않은 변경사항:")
+            print("🔍 스테이징되지 않은 변경사항: \n\tsession.call_tool('git_diff_unstaged', {'repo_path': '../..', 'context_lines': 3})")
             try:
                 result = await session.call_tool("git_diff_unstaged", {
                     "repo_path": "../..",
@@ -89,7 +89,7 @@ async def test_git_server():
             print()
             
             # 6. 스테이징된 변경사항 확인
-            print("📝 스테이징된 변경사항:")
+            print("📝 스테이징된 변경사항: \n\tsession.call_tool('git_diff_staged', {'repo_path': '../..', 'context_lines': 3})")
             try:
                 result = await session.call_tool("git_diff_staged", {
                     "repo_path": "../..",
@@ -105,7 +105,7 @@ async def test_git_server():
             print()
             
             # 7. 원격 브랜치 목록 확인
-            print("🌐 원격 브랜치 목록:")
+            print("🌐 원격 브랜치 목록: \n\tsession.call_tool('git_branch', {'repo_path': '../..', 'branch_type': 'remote'})")
             try:
                 result = await session.call_tool("git_branch", {
                     "repo_path": "../..",
@@ -117,7 +117,7 @@ async def test_git_server():
             print()
             
             # 8. 최신 커밋 상세 정보
-            print("🔎 최신 커밋 상세 정보:")
+            print("🔎 최신 커밋 상세 정보: \n\tsession.call_tool('git_show', {'repo_path': '../..', 'revision': 'HEAD'})")
             try:
                 result = await session.call_tool("git_show", {
                     "repo_path": "../..",
